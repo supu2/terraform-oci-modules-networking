@@ -106,9 +106,10 @@ resource "oci_core_remote_peering_connection" "oci_acceptor_remote_peering_conne
   display_name  = each.value.display_name
   freeform_tags = merge(local.cislz_module_tag, each.value.freeform_tags)
 
+  is_cross_tenancy_peering = try(each.value.is_cross_tenancy_peering, null)
   peer_region_name = null
-
-  peer_id = null
+  peer_tenancy_id = try(each.value.peer_tenancy_id, null)
+  peer_id = each.value.peer_id != null ? each.value.peer_id : (each.value.peer_key != null ? merge(oci_core_remote_peering_connection.oci_acceptor_remote_peering_connections, try(var.network_dependency["remote_peering_connections"], {}))[each.value.peer_key].id : null)
 }
 
 # OCI RESOURCE
@@ -122,7 +123,9 @@ resource "oci_core_remote_peering_connection" "oci_requestor_remote_peering_conn
   display_name  = each.value.display_name
   freeform_tags = merge(local.cislz_module_tag, each.value.freeform_tags)
 
-  peer_region_name = contains(keys(try(var.network_dependency["remote_peering_connections"], {})), each.value.peer_key) ? var.network_dependency["remote_peering_connections"][each.value.peer_key].region_name : each.value.peer_region_name
 
+  is_cross_tenancy_peering = try(each.value.is_cross_tenancy_peering, null)
+  peer_region_name = null
+  peer_tenancy_id = try(each.value.peer_tenancy_id, null)
   peer_id = each.value.peer_id != null ? each.value.peer_id : (each.value.peer_key != null ? merge(oci_core_remote_peering_connection.oci_acceptor_remote_peering_connections, try(var.network_dependency["remote_peering_connections"], {}))[each.value.peer_key].id : null)
 }
